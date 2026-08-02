@@ -1,0 +1,20 @@
+{
+  "name": "pi-skill-hub",
+  "version": "0.1.0",
+  "description": "Two-level skill discovery for pi: a large central skill library (level 1) plus on-demand retrieval and project-local installation (level 2).",
+  "type": "module",
+  "keywords": ["pi-package", "pi", "skill", "skills", "skill-discovery", "retrieval"],
+  "files": [
+    "src",
+    "README.md",
+    "package.json"
+  ],
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "pi": {
+    "extensions": ["./src/index.ts"]
+  }
+}
