@@ -1,21 +1,21 @@
-# pi-skill-hub
+# pi-skill-managerhub
 
 [中文说明](README.zh-CN.md)
 
 A two-level skill discovery extension for the Pi coding agent. It lets an agent search a large central skill library at low context cost, then install only the skills needed by the current project.
 
-This package follows the [Pi Package](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/packages.md) format and is published on GitHub:
+This package follows the [Pi Package](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/packages.md) format. The source repository is published on GitHub, and the npm package name is `pi-skill-managerhub`:
 
 <https://github.com/TangQi001/pi-skill-hub>
 
-The GitHub package is ready to install. It is not published to npm yet, so it is not currently listed in the public `pi.dev/packages` catalog.
+The package is available from both GitHub and npm. Because it carries the `pi-package` keyword, it can also be indexed by the public `pi.dev/packages` catalog.
 
 ## Install as a Pi Package
 
 Install the published GitHub package:
 
 ```bash
-pi install git:github.com/TangQi001/pi-skill-hub@v0.1.2
+pi install git:github.com/TangQi001/pi-skill-hub@v0.1.3
 ```
 
 Try a local checkout:
@@ -24,10 +24,10 @@ Try a local checkout:
 pi install /absolute/path/to/pi-skill-hub
 ```
 
-After an npm release, the package can also be installed with:
+Install the npm package with:
 
 ```bash
-pi install npm:<package-name>@0.1.2
+pi install npm:pi-skill-managerhub@0.1.3
 ```
 
 ## Two-Level Strategy
@@ -145,12 +145,12 @@ Skills installed during startup are contributed to Pi's resource discovery flow 
 - The published GitHub package installs successfully with:
 
   ```bash
-  pi install git:github.com/TangQi001/pi-skill-hub@v0.1.2
+  pi install git:github.com/TangQi001/pi-skill-hub@v0.1.3
   ```
+- The npm package is published as `pi-skill-managerhub`.
 
 ## Possible Future Improvements
 
 - Remote level-1 library synchronization from Git or npm sources.
 - Silent recommendations based on the first user prompt.
 - Search telemetry to improve skill descriptions and keyword quality.
-- npm publication so the package appears in the public Pi package catalog.

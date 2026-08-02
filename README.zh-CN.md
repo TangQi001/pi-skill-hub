@@ -4,7 +4,7 @@
 
 Pi 智能体的**两级技能发现**扩展：让 AI 以最小上下文代价，从一个可容纳成千上万个技能的中心库中，按需检索并安装当前项目需要的技能。
 
-本包已经按 Pi Package 规范配置，并发布到 GitHub：<https://github.com/TangQi001/pi-skill-hub>。当前通过 Git 分发，尚未发布到 npm，因此还不会出现在 `pi.dev/packages` 的公共目录中。
+本包已经按 Pi Package 规范配置，并发布到 GitHub：<https://github.com/TangQi001/pi-skill-hub>。当前同时通过 GitHub 和 npm 分发。由于包含 `pi-package` keyword，npm 索引刷新后会出现在 `pi.dev/packages` 公共目录中。npm 包名为 `pi-skill-managerhub`。
 
 ## 作为 Pi Package 安装
 
@@ -17,13 +17,13 @@ pi install /absolute/path/to/pi-skill-hub
 GitHub 安装：
 
 ```bash
-pi install git:github.com/TangQi001/pi-skill-hub@v0.1.2
+pi install git:github.com/TangQi001/pi-skill-hub@v0.1.3
 ```
 
-npm 发布后可以这样安装：
+npm 安装：
 
 ```bash
-pi install npm:<package-name>@0.1.2
+pi install npm:pi-skill-managerhub@0.1.3
 ```
 
 ## 两级策略
@@ -38,10 +38,13 @@ pi install npm:<package-name>@0.1.2
 ## 安装
 
 ```bash
-# 方式一：通过 GitHub Pi Package 安装（推荐）
-pi install git:github.com/TangQi001/pi-skill-hub@v0.1.2
+# 方式一：通过 GitHub Pi Package 安装
+pi install git:github.com/TangQi001/pi-skill-hub@v0.1.3
 
-# 方式二：本地扩展目录
+# 方式二：通过 npm Pi Package 安装（推荐）
+pi install npm:pi-skill-managerhub@v0.1.3
+
+# 方式三：本地扩展目录
 cp -r pi-skill-hub ~/.pi/agent/extensions/skill-hub
 
 # 方式三：通过 settings.json 指向任意路径
@@ -130,7 +133,8 @@ cp -r pi-skill-hub ~/.pi/agent/extensions/skill-hub
 - 中文检索 `视频字幕` → 命中 `video-edit`。
 - 语义检索 `用我自己的声音给视频配音` → `vid-tts-ali` 排在前面。
 - `pull` 后项目技能在后续会话中出现在 `available_skills`。
-- GitHub Pi Package 安装测试通过：`git:github.com/TangQi001/pi-skill-hub@v0.1.2`。
+- GitHub Pi Package 安装测试通过：`git:github.com/TangQi001/pi-skill-hub@v0.1.3`。
+- npm 包名为 `pi-skill-managerhub`。
 
 ## 后续可扩展方向
 

@@ -1,6 +1,6 @@
 {
-  "name": "pi-skill-hub",
-  "version": "0.1.2",
+  "name": "pi-skill-managerhub",
+  "version": "0.1.3",
   "description": "Two-level skill discovery for pi: a large central skill library (level 1) plus on-demand retrieval and project-local installation (level 2).",
   "type": "module",
   "repository": {
