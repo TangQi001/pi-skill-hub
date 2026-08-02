@@ -2,7 +2,7 @@
 
 Pi 智能体的**两级技能发现**扩展：让 AI 以最小上下文代价，从一个可容纳成千上万个技能的中心库中，按需检索并安装当前项目需要的技能。
 
-本目录已经按 Pi Package 规范配置，可通过本地路径、Git 仓库或 npm 分发。当前尚未绑定具体 GitHub 仓库或 npm scope。
+本目录已经按 Pi Package 规范配置，并已发布到 GitHub：<https://github.com/TangQi001/pi-skill-hub>。当前通过 Git 分发，尚未发布到 npm。
 
 ## 作为 Pi Package 安装
 
@@ -15,13 +15,13 @@ pi install /absolute/path/to/pi-skill-hub
 发布到 GitHub 后：
 
 ```bash
-pi install git:github.com/<owner>/pi-skill-hub@v0.1.0
+pi install git:github.com/TangQi001/pi-skill-hub@v0.1.1
 ```
 
 发布到 npm 后：
 
 ```bash
-pi install npm:<package-name>@0.1.0
+pi install npm:<package-name>@0.1.1
 ```
 
 ## 两级策略
