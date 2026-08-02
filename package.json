@@ -1,12 +1,21 @@
 {
   "name": "pi-skill-hub",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Two-level skill discovery for pi: a large central skill library (level 1) plus on-demand retrieval and project-local installation (level 2).",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TangQi001/pi-skill-hub.git"
+  },
+  "homepage": "https://github.com/TangQi001/pi-skill-hub#readme",
+  "bugs": {
+    "url": "https://github.com/TangQi001/pi-skill-hub/issues"
+  },
   "keywords": ["pi-package", "pi", "skill", "skills", "skill-discovery", "retrieval"],
   "files": [
     "src",
     "README.md",
+    "README.zh-CN.md",
     "package.json"
   ],
   "peerDependencies": {

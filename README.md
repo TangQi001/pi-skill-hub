@@ -1,51 +1,59 @@
 # pi-skill-hub
 
-Pi 智能体的**两级技能发现**扩展：让 AI 以最小上下文代价，从一个可容纳成千上万个技能的中心库中，按需检索并安装当前项目需要的技能。
+[中文说明](README.zh-CN.md)
 
-本目录已经按 Pi Package 规范配置，并已发布到 GitHub：<https://github.com/TangQi001/pi-skill-hub>。当前通过 Git 分发，尚未发布到 npm。
+A two-level skill discovery extension for the Pi coding agent. It lets an agent search a large central skill library at low context cost, then install only the skills needed by the current project.
 
-## 作为 Pi Package 安装
+This package follows the [Pi Package](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/packages.md) format and is published on GitHub:
 
-本地测试：
+<https://github.com/TangQi001/pi-skill-hub>
+
+The GitHub package is ready to install. It is not published to npm yet, so it is not currently listed in the public `pi.dev/packages` catalog.
+
+## Install as a Pi Package
+
+Install the published GitHub package:
+
+```bash
+pi install git:github.com/TangQi001/pi-skill-hub@v0.1.2
+```
+
+Try a local checkout:
 
 ```bash
 pi install /absolute/path/to/pi-skill-hub
 ```
 
-发布到 GitHub 后：
+After an npm release, the package can also be installed with:
 
 ```bash
-pi install git:github.com/TangQi001/pi-skill-hub@v0.1.1
+pi install npm:<package-name>@0.1.2
 ```
 
-发布到 npm 后：
+## Two-Level Strategy
 
-```bash
-pi install npm:<package-name>@0.1.1
+| Level | Role | Implementation |
+|---|---|---|
+| Level 1 | Central library with thousands of skills | One or more directories, defaulting to `~/.pi/skill-library/`. The library is not included in Pi's normal skill discovery paths, so it does not add all skill content to the prompt. The extension only builds a lightweight index from `SKILL.md` frontmatter (`name`, `description`, and `keywords`). |
+| Level 2 | Filtering and on-demand installation | The agent calls the `skill_hub` tool to search the index, then pulls selected skills into the project-local `.pi/skills/` directory. That directory is the marker for skills acquired by the project, and Pi discovers those skills in later sessions. |
+
+Only the small `skill_hub` tool description remains permanently available to the model. Full skill instructions are loaded only when needed.
+
+## Configuration
+
+Global configuration:
+
+```text
+~/.pi/agent/skill-hub.json
 ```
 
-## 两级策略
+A project-level file can override it:
 
-| 层级 | 角色 | 实现 |
-|------|------|------|
-| 一级 | 中心技能库（可成千上万） | 任意目录（默认 `~/.pi/skill-library/`），**不进入** Pi 的技能扫描路径，上下文代价为零。扩展只解析每个 `SKILL.md` 的 frontmatter（name/description/keywords）建立轻量索引。 |
-| 二级 | 筛选 + 按需安装 | AI 调用 `skill_hub` 工具：关键词（可选 embedding）检索索引 → `pull` 把命中技能复制到项目本地 `.pi/skills/`。该目录成为"已获得技能"的标志，Pi 原生发现它们，后续会话自动可用。 |
-
-系统提示词中常驻的只有 `skill_hub` 这一个工具的说明，这就是全部固定代价。
-
-## 安装
-
-```bash
-# 方式一：全局扩展目录（推荐，/reload 可热更新）
-cp -r pi-skill-hub ~/.pi/agent/extensions/skill-hub
-
-# 方式二：settings.json 指向任意路径
-{ "extensions": ["/path/to/pi-skill-hub"] }
+```text
+<project>/.pi/skill-hub.json
 ```
 
-## 配置
-
-全局 `~/.pi/agent/skill-hub.json`，项目可覆盖：`<项目>/.pi/skill-hub.json`
+Example:
 
 ```json
 {
@@ -53,6 +61,7 @@ cp -r pi-skill-hub ~/.pi/agent/extensions/skill-hub
   "installDir": ".pi/skills",
   "inlineOnPull": true,
   "defaultLimit": 8,
+  "onboarding": true,
   "embeddings": {
     "baseUrl": "https://api.openai.com/v1",
     "apiKey": "$OPENAI_API_KEY",
@@ -62,51 +71,86 @@ cp -r pi-skill-hub ~/.pi/agent/extensions/skill-hub
 }
 ```
 
-- `library`：一级库目录列表，递归扫描 `SKILL.md`。
-- `installDir`：项目内安装位置，默认 `.pi/skills`（Pi 原生技能路径）。
-- `inlineOnPull`：pull 时在工具结果里直接带回 SKILL.md 全文，当前会话立即可用，无需等待 reload。
-- `embeddings`：可选。配置后用 OpenAI 兼容接口做向量检索，与关键词分数加权混合（`weight` 为向量权重）；向量按内容哈希缓存在 `~/.cache/pi-skill-hub/`，失败自动降级为纯关键词检索。
+- `library`: One or more level-1 library directories. Each is scanned recursively for `SKILL.md`.
+- `installDir`: Project-local installation directory. Defaults to `.pi/skills`, a native Pi skill location.
+- `inlineOnPull`: Returns the pulled `SKILL.md` content in the tool result so the current turn can use it immediately.
+- `defaultLimit`: Default number of search results.
+- `onboarding`: Enables the first-run project onboarding flow. Defaults to `true`.
+- `embeddings`: Optional OpenAI-compatible embedding search. The vector score is blended with the keyword score using `weight`. Vectors are cached by content hash in `~/.cache/pi-skill-hub/`; failed embedding requests fall back to keyword search.
 
-## AI 侧工具：`skill_hub`
+### SiliconFlow Example
 
-| action | 参数 | 说明 |
-|--------|------|------|
-| `search` | `query`, `limit?` | 检索索引，返回排序后的候选（名称/分数/简介/路径/是否已安装）。中英文均可（英文按词、中文按二元字组）。 |
-| `pull` | `names[]` | 把技能复制到项目 `installDir`，更新 `.skill-hub.json` 清单，并内联返回 SKILL.md 内容。 |
-| `list` | — | 列出本项目已安装技能。 |
-| `remove` | `names[]` | 从项目卸载。 |
-| `info` | `names[0]` | 查看单个技能完整元数据。 |
+The extension also works with SiliconFlow and other OpenAI-compatible endpoints:
 
-用户侧命令：`/skill-hub`（状态）、`/skill-hub-reindex`（重建索引）。
+```json
+{
+  "embeddings": {
+    "baseUrl": "https://api.siliconflow.cn/v1",
+    "apiKey": "$SILICONFLOW_API_KEY",
+    "model": "Qwen/Qwen3-Embedding-8B",
+    "weight": 0.7
+  }
+}
+```
 
-## 项目开机引导（onboarding）
+Keep real API keys out of Git repositories. Prefer environment variable references.
 
-首次在某个项目打开 pi 时，扩展检查 `.pi` 下是否有本插件安装的技能：
+## Agent Tool: `skill_hub`
 
-1. **已有**（`.pi/skills/.skill-hub.json` 清单非空）→ 状态栏显示数量，不打扰。
-2. **没有** → 弹出输入框问「这是什么项目？」→ 用描述检索一级库 → 展示前 6 个候选，可选 **全部安装 / 逐个选择 / 跳过** → 安装到 `.pi/skills/`。
-3. 安装发生在 `session_start`（先于 `resources_discover`），装完的技能**首轮对话即可用**，无需 /reload。
-4. 无论安装还是跳过，都写入 `.pi/skill-hub.state.json` 标志；**之后打开该项目永不再问**。想重新配置随时运行 `/skill-hub-setup`（手动模式装完可选择立即 reload）。
+| Action | Parameters | Description |
+|---|---|---|
+| `search` | `query`, optional `limit` | Search the library and return ranked candidates with names, scores, descriptions, paths, and installation status. English and Chinese queries are supported. |
+| `pull` | `names[]` | Copy selected skills into the project's `installDir`, update the `.skill-hub.json` manifest, and optionally return the full `SKILL.md` content. |
+| `list` | — | List skills installed in the current project. |
+| `remove` | `names[]` | Remove selected project-local skills. |
+| `info` | `names[0]` | Show complete metadata for one library skill. |
 
-仅在 TUI 交互模式触发；print/rpc 模式静默跳过。配置项 `"onboarding": false` 可整体关闭。
+User commands:
 
-## 工作流程
+- `/skill-hub` — show library, index, embedding, and installation status.
+- `/skill-hub-reindex` — rebuild the level-1 library index.
+- `/skill-hub-setup` — run project onboarding again.
 
-1. 打开智能体 → 首次触发上面的开机引导；之后扩展检查 `.pi/skills/.skill-hub.json` 标志，状态栏显示已安装数量。
-2. AI 遇到任务 → `skill_hub search`（只读索引，代价极小）→ `pull` 命中的 1~2 个技能。
-3. pull 后技能内容当即可用；`/reload`（或下次会话）后进入 `available_skills` 正式列表，之后可直接 `read` SKILL.md 或用 `/skill:<name>`。
-4. 需要新技能时随时重复第 2 步。
+## First-Run Project Onboarding
 
-> 注意：`.pi/` 下的技能属于项目本地资源，需要项目被信任（交互模式会询问一次并记住；print 模式用 `--approve`）。
+When Pi is opened in a project for the first time, the extension checks whether the project already has skills acquired through Skill Hub:
 
-## 验证过的行为
+1. If `.pi/skills/.skill-hub.json` contains installed skills, the extension shows the count in the status bar and does not interrupt the user.
+2. If there are no installed skills, the extension asks: **“What kind of project is this?”**
+3. It searches the level-1 library and presents up to six candidates.
+4. The user can choose **Install all**, **Choose individually**, or **Skip**.
+5. The selected skills are installed into `.pi/skills/`.
+6. The extension writes `.pi/skill-hub.state.json`, so the project is not asked again on later sessions.
 
-- 英文检索 `pdf extract` → 命中 `pdf-tools`（score 10）。
-- 中文检索 `视频字幕` → 命中 `video-edit`。
-- `pull` 后 `.pi/skills/video-edit` 在新会话中出现在 `available_skills`。
+Onboarding runs only in interactive TUI mode. Print and RPC modes skip it silently. Set `"onboarding": false` to disable it.
 
-## 后续可扩展方向
+Skills installed during startup are contributed to Pi's resource discovery flow and are available in the first conversation turn without a reload. Skills installed later through `skill_hub` are persistent and appear after `/reload` or in the next session.
 
-- 远程库同步（git/npm 包作为一级库，`pull` 时下载）。
-- 基于会话内容的自动推荐（`before_agent_start` 里对用户首条 prompt 静默检索并提示候选）。
-- 检索遥测：记录命中率，反哺 description/keywords 质量。
+## Typical Workflow
+
+1. Open Pi in a new project and complete the one-time onboarding prompt.
+2. When a task needs another capability, call `skill_hub` with `search`.
+3. Pull only the one or two relevant skills.
+4. Use the pulled skill immediately, or let Pi discover it after reload/the next session.
+5. Repeat the search-and-pull flow whenever the project grows.
+
+> Project-local `.pi/` resources require project trust. Interactive Pi asks for trust once; use `--approve` in non-interactive tests.
+
+## Verified Behavior
+
+- `pdf extract` finds `pdf-tools`.
+- `视频字幕` finds `video-edit`.
+- `用我自己的声音给视频配音` ranks `vid-tts-ali` above the default-voice skill.
+- Pulled skills appear in `available_skills` in subsequent sessions.
+- The published GitHub package installs successfully with:
+
+  ```bash
+  pi install git:github.com/TangQi001/pi-skill-hub@v0.1.2
+  ```
+
+## Possible Future Improvements
+
+- Remote level-1 library synchronization from Git or npm sources.
+- Silent recommendations based on the first user prompt.
+- Search telemetry to improve skill descriptions and keyword quality.
+- npm publication so the package appears in the public Pi package catalog.
